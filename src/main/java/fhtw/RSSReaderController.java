@@ -6,7 +6,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -96,6 +95,12 @@ public class RSSReaderController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
 
         if (startDate == null || endDate == null) {
+            showAlert("Bitte wählen Sie ein Start- und Enddatum aus.");
+            return;
+        }
+
+        if (endDate.isBefore(startDate)) {
+            showAlert("Das Enddatum muss nach dem Startdatum liegen.");
             return;
         }
 
