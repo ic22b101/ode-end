@@ -1,13 +1,26 @@
 package fhtw;
 
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+
+import java.io.IOException;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.ZonedDateTime;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Controller-Klasse für die RSS-Reader JavaFX-Anwendung.
@@ -22,12 +35,61 @@ import java.util.TimerTask;
 public class RSSReaderController {
 
     @FXML
+    private DatePicker startDatePicker;
+
+    @FXML
+    private DatePicker endDatePicker;
+
+    @FXML
+    private void handleFilterButtonAction(ActionEvent event) {
+        filterFeeds();
+    }
+    @FXML
     private ComboBox<String> intervalComboBox;
 
     @FXML
     private TextArea rssFeedTextArea;
 
     private Timer timer;
+
+    public void filterFeeds() {
+        LocalDate startDate = startDatePicker.getValue();
+        LocalDate endDate = endDatePicker.getValue();
+
+
+
+
+        BaseFeedParser parser = new BaseFeedParser("https://www.derstandard.at/rss");
+        try {
+            NodeList itemList = parser.parse();
+            StringBuilder filteredContent = new StringBuilder();
+            for (int i = 0; i < itemList.getLength(); i++) {
+                Element item = (Element) itemList.item(i);
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'Z'", Locale.ENGLISH);
+
+                String pubDateStr = item.getElementsByTagName("pubDate").item(0).getTextContent();
+                ZonedDateTime pubDate = ZonedDateTime.parse(pubDateStr, formatter);
+                LocalDate pubDateLocal = pubDate.toLocalDate();
+
+                if ((pubDateLocal.isEqual(startDate) || pubDateLocal.isAfter(startDate)) &&
+                        (pubDateLocal.isEqual(endDate) || pubDateLocal.isBefore(endDate))) {
+                    String title = item.getElementsByTagName("title").item(0).getTextContent();
+                    String link = item.getElementsByTagName("link").item(0).getTextContent();
+                    filteredContent.append("Title: ").append(title)
+                            .append("\nLink: ").append(link)
+                            .append("\nPublished: ").append(pubDateStr)
+                            .append("\n\n");
+                }
+            }
+
+            // Aktualisieren Sie die Anzeige mit den gefilterten Inhalten
+            rssFeedTextArea.setText(filteredContent.toString());
+        } catch (Exception e) {
+            System.err.println("Fehler beim Parsen der Feeds: " + e.getMessage());
+            // Behandeln Sie den Fehler angemessen (z. B. Anzeigen einer Fehlermeldung in der Benutzeroberfläche)
+        }
+    }
+
 
     /**
      * Startet die regelmäßige Aktualisierung der RSS-Feeds.

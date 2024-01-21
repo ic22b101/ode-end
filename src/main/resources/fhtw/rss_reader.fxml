@@ -10,6 +10,12 @@
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
+
+    <!-- Datumswähler für den Start- und Enddatum -->
+    <DatePicker fx:id="startDatePicker" promptText="Startdatum"/>
+    <DatePicker fx:id="endDatePicker" promptText="Enddatum"/>
+
+    <!-- ComboBox für das Aktualisierungsintervall -->
     <ComboBox fx:id="intervalComboBox" promptText="Update Interval (in Hours)">
         <items>
             <FXCollections fx:factory="observableArrayList">
@@ -22,7 +28,15 @@
             </FXCollections>
         </items>
     </ComboBox>
+
+    <!-- Button für filtern-->
+    <Button fx:id="filterButton" text="Filtern" onAction="#handleFilterButtonAction" />
+
+
+    <!-- Button zum Starten des Updates -->
     <Button text="Start Update" onAction="#startFeedUpdate"/>
+
+    <!-- Textbereich für die Anzeige der RSS-Feeds -->
     <TextArea fx:id="rssFeedTextArea" editable="false" prefWidth="600" prefHeight="800"/>
 
 </VBox>

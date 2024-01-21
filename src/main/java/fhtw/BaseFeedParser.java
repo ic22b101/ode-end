@@ -50,13 +50,25 @@ public class BaseFeedParser {
      * @throws IOException Wenn ein IO-Fehler beim Lesen des RSS-Feeds auftritt.
      */
 
-
         public NodeList parse() throws MalformedURLException, ParserConfigurationException, SAXException, IOException {
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(new URL(feedUrl).openStream());
             return doc.getElementsByTagName("item");
         }
+
+    /*public NodeList getFeedItems() {
+        try {
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(new URL(feedUrl).openStream());
+            doc.getDocumentElement().normalize();
+            return doc.getElementsByTagName("item");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }*/
 
     }
 
