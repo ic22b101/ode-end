@@ -1,6 +1,7 @@
 package fhtw;
 
 
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -20,6 +21,10 @@ import java.util.Objects;
  */
 public class RSSReaderApplication extends javafx.application.Application {
 
+    private RSSFeedServer feedServer;
+    private RSSFeedClient feedClient;
+    private RSSReaderController controller;
+
     /**
      * Startet die primäre Stage (Fenster) der Anwendung.
      * <p>
@@ -33,7 +38,11 @@ public class RSSReaderApplication extends javafx.application.Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/fhtw/rss_reader.fxml")));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fhtw/rss_reader.fxml"));
+            Parent root = loader.load();
+
+            // Zugriff auf den Controller
+            controller = loader.getController();
 
             primaryStage.setTitle("RSS Reader App");
 
@@ -42,6 +51,7 @@ public class RSSReaderApplication extends javafx.application.Application {
             primaryStage.setScene(scene);
 
             primaryStage.show();
+            startRSSServices();
         } catch (Exception e) {
             RSSReaderController.showAlert("Ein Fehler ist aufgetreten: " + e.getMessage());
         }
@@ -59,8 +69,6 @@ public class RSSReaderApplication extends javafx.application.Application {
      * @param args Kommandozeilenargumente, die an die Anwendung übergeben werden.
      */
     public static void main(String[] args) {
-        Thread rssThread = new Thread(RSSReaderApplication::startRSSApplication);
-        rssThread.start();
         launch(args);
     }
 
@@ -74,31 +82,20 @@ public class RSSReaderApplication extends javafx.application.Application {
      * und ruft die neuesten RSS-Feeds ab.
      * </p>
      */
-    public static void startRSSApplication() {
-        Thread serverThread = new Thread(() -> {
-            RSSFeedTCPServer server = new RSSFeedTCPServer("https://www.derstandard.at/rss");
-            server.start(6666);
-        });
-        serverThread.start();
+    private void startRSSServices() {
+        feedServer = new RSSFeedServer(6666);
+        feedServer.startServer();
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            System.err.println("Warten unterbrochen: " + e.getMessage());
-        }
-
-        RSSFeedTCPClient client = new RSSFeedTCPClient();
-        try {
-            client.startConnection("127.0.0.1", 6666);
-            String feedData = client.getLatestFeeds();
-        } catch (IOException e) {
-            System.err.println("Fehler beim Starten des Clients: " + e.getMessage());
-        } finally {
+        feedClient = new RSSFeedClient("127.0.0.1", 6666);
+        new Thread(() -> {
             try {
-                client.stopConnection();
+                String feedData = feedClient.fetchFeeds();
+                Platform.runLater(() -> {
+                    controller.updateFeedListView(feedData);
+                });
             } catch (IOException e) {
-                System.err.println("Fehler beim Schließen der Verbindung: " + e.getMessage());
+                Platform.runLater(() -> RSSReaderController.showAlert("Fehler beim Abrufen der Feeds: " + e.getMessage()));
             }
-        }
+        }).start();
     }
 }

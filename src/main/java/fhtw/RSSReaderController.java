@@ -270,7 +270,7 @@ public class RSSReaderController {
     }
 
 
-    private void updateFeedListView(String rssText) {
+    void updateFeedListView(String rssText) {
         List<String> feeds = new ArrayList<>();
 
         String[] lines = rssText.split("\n");
