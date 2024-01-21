@@ -4,13 +4,11 @@ import java.io.*;
 import java.net.*;
 
 /**
- * Client-Klasse für die Kommunikation mit dem RSS-Feed-Server über TCP.
+ * Client-Klasse für die Kommunikation mit einem RSS-Feed-Server über TCP.
  * <p>
- * Diese Klasse stellt Methoden zum Herstellen einer Verbindung mit dem Server,
- * zum Empfangen der neuesten RSS-Feeds und zum Schließen der Verbindung bereit.
+ * Diese Klasse ermöglicht es, eine TCP-Verbindung zu einem Server aufzubauen, um die neuesten
+ * RSS-Feeds abzurufen und die Verbindung anschließend wieder zu schließen.
  * </p>
- *
- * @see RSSFeedTCPServer
  * @since 1.0
  */
 public class RSSFeedTCPClient {
@@ -18,64 +16,49 @@ public class RSSFeedTCPClient {
     private BufferedReader in;
 
     /**
-     * Stellt eine Verbindung mit dem Server her.
+     * Stellt eine Verbindung zum RSS-Feed-Server her.
      * <p>
-     * Versucht, eine TCP-Verbindung zum angegebenen Server und Port herzustellen.
-     * Gibt bei Erfolg {@code true} und bei Misserfolg {@code false} zurück.
+     * Diese Methode baut eine Verbindung zu einem Server unter der angegebenen IP-Adresse
+     * und Portnummer auf.
      * </p>
-     *
-     * @param ip   Die IP-Adresse des Servers.
+     * @param ip Die IP-Adresse des Servers.
      * @param port Der Port des Servers.
+     * @throws IOException Wenn beim Aufbau der Verbindung ein Fehler auftritt.
      */
-    public void startConnection(String ip, int port) {
-        try {
-            clientSocket = new Socket(ip, port);
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        } catch (IOException e) {
-            System.err.println("Fehler beim Herstellen einer Verbindung: " + e.getMessage());
-        }
+
+    public void startConnection(String ip, int port) throws IOException {
+        clientSocket = new Socket(ip, port);
+        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
     }
 
     /**
      * Ruft die neuesten RSS-Feeds vom Server ab.
      * <p>
-     * Liest die Daten vom Server und gibt sie als formatierten String zurück.
-     * Bei einem Fehler wird eine entsprechende Fehlermeldung zurückgegeben.
+     * Diese Methode liest die Daten, die vom Server gesendet werden, und gibt sie als formatierten
+     * String zurück.
      * </p>
-     *
-     * @return Die empfangenen RSS-Feed-Daten als String oder eine Fehlermeldung.
+     * @return Ein String, der die empfangenen RSS-Feed-Daten enthält.
+     * @throws IOException Wenn beim Lesen der Daten ein Fehler auftritt.
      */
-    public String getLatestFeeds() {
-        try {
-            StringBuilder feeds = new StringBuilder();
-            String line;
-            while ((line = in.readLine()) != null) {
-                feeds.append(line).append("\n");
-            }
-            return feeds.toString();
-        } catch (IOException e) {
-            System.err.println("Fehler beim Lesen der Feeds: " + e.getMessage());
-            return "Fehler beim Lesen der Feeds";
+    public String getLatestFeeds() throws IOException {
+        StringBuilder feeds = new StringBuilder();
+        String line;
+        while ((line = in.readLine()) != null) {
+            feeds.append(line).append("\n");
         }
+        return feeds.toString();
     }
 
     /**
      * Schließt die Verbindung zum Server.
      * <p>
-     * Schließt den Inputstream und den Socket. Bei einem Fehler wird eine Fehlermeldung
-     * auf der Standardfehlerausgabe ausgegeben.
+     * Diese Methode schließt den Inputstream und den Socket, um die Verbindung zum Server
+     * ordnungsgemäß zu beenden.
      * </p>
+     * @throws IOException Wenn beim Schließen der Verbindung ein Fehler auftritt.
      */
-    public void stopConnection() {
-        try {
-            if (in != null) {
-                in.close();
-            }
-            if (clientSocket != null) {
-                clientSocket.close();
-            }
-        } catch (IOException e) {
-            System.err.println("Fehler beim Schließen der Verbindung: " + e.getMessage());
-        }
+    public void stopConnection() throws IOException {
+        if (in != null) in.close();
+        if (clientSocket != null) clientSocket.close();
     }
 }

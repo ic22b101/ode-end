@@ -25,8 +25,9 @@ public class RSSReader {
     /**
      * Hauptmethode zum Abrufen und Anzeigen von RSS-Feed-Daten.
      * <p>
-     * Diese Methode lädt RSS-Feed-Daten von einer vorgegebenen URL und gibt die
-     * einzelnen Elemente des Feeds auf der Konsole aus.
+     * Diese Methode lädt RSS-Feed-Daten von einer angegebenen URL und gibt die
+     * Details der einzelnen Feed-Elemente wie Titel, Link und Veröffentlichungsdatum auf der Konsole aus.
+     * Bei Auftreten von Fehlern werden entsprechende Fehlermeldungen ausgegeben.
      * </p>
      *
      * @param args Kommandozeilenargumente, nicht verwendet.

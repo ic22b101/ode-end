@@ -27,8 +27,10 @@ public class Frequency {
     private static final long UPDATE_INTERVAL = 60 * 60 * 1000;
 
     /**
-     * <p>Hauptmethode zum Initialisieren und Starten des TimerTasks zur RSS-Feed-Aktualisierung.</p>
-     *
+     * Hauptmethode zum Initialisieren und Starten des TimerTasks zur RSS-Feed-Aktualisierung.
+     * <p>
+     * Diese Methode initialisiert einen Timer, der den RssFeedTask in regelmäßigen Abständen ausführt.
+     * </p>
      * @param args Kommandozeilenargumente (werden nicht verwendet).
      */
     public static void main(String[] args) {
@@ -37,8 +39,12 @@ public class Frequency {
     }
 
     /**
-     * <p>TimerTask zur Durchführung der RSS-Feed-Aktualisierung.</p>
-     * <p>Diese Klasse ruft den RSS-Feed von der angegebenen URL ab und gibt die Titel und Links der Feed-Elemente aus.</p>
+     * TimerTask zur Durchführung der RSS-Feed-Aktualisierung.
+     * <p>
+     * Diese innere Klasse ruft den RSS-Feed von der angegebenen URL ab und gibt die Titel und Links
+     * der Feed-Elemente auf der Konsole aus. Sie behandelt auch eventuelle Fehler bei der Abfrage
+     * und beim Parsen der RSS-Feeds.
+     * </p>
      */
     static class RssFeedTask extends TimerTask {
         @Override

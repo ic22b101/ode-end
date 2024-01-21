@@ -78,7 +78,6 @@ public class AdvancedFeedParser extends BaseFeedParser {
      * Bei einem IO-Fehler wird eine Benutzerdialogbox mit einer Fehlermeldung angezeigt.
      * </p>
      *
-     * @throws IOException Wenn ein IO-Fehler beim Schreiben der Datei auftritt.
      */
     public void saveFeedsToCSV() {
         try {

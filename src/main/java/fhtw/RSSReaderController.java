@@ -1,24 +1,20 @@
 package fhtw;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import java.time.LocalDateTime;
-import java.util.Locale;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.nio.charset.StandardCharsets;
-import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 
 /**
@@ -37,7 +33,7 @@ public class RSSReaderController {
     private DatePicker startDatePicker,endDatePicker;
 
     @FXML
-    private void handleFilterButtonAction(ActionEvent event) {
+    private void handleFilterButtonAction() {
         loadFeeds();
     }
 
@@ -49,21 +45,26 @@ public class RSSReaderController {
 
     private Timer timer;
 
-    private List<String> favorites = new ArrayList<>();
+    private final List<String> favorites = new ArrayList<>();
 
     @FXML
-    private ListView<String> feedListView; // Angenommen, die Feeds werden als Strings angezeigt
+    private ListView<String> feedListView;
 
     @FXML
-    private ListView<String> favoritesListView; // Liste der Favoriten
+    private ListView<String> favoritesListView;
 
 
-
+    /**
+     * Initialisiert die Benutzeroberfläche und lädt gespeicherte Favoriten.
+     * <p>
+     * Diese Methode konfiguriert die ListView für Favoriten und lädt bestehende Favoriten aus einer Datei.
+     * Sie richtet auch die ListView für Feed-Anzeigen ein und fügt Hinzufügen-Buttons zu jeder Zeile hinzu.
+     * </p>
+     */
     public void initialize() {
         configureFavoritesListView();
-        loadFavorites(); // Lädt die Feeds beim Start
 
-        feedListView.setCellFactory(lv -> new ListCell<String>() {
+        feedListView.setCellFactory(lv -> new ListCell<>() {
             private final Button addToFavoritesButton = new Button("Zu Favoriten hinzufügen");
 
             @Override
@@ -73,30 +74,37 @@ public class RSSReaderController {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    setText(item); // Anzeige des Feed-Eintrags
-                    addToFavoritesButton.setOnAction(e -> addFavorite(item)); // Hinzufügen des Feed-Eintrags zu Favoriten
-                    setGraphic(addToFavoritesButton); // Button neben dem Feed-Eintrag anzeigen
+                    setText(item);
+                    addToFavoritesButton.setOnAction(e -> addFavorite(item));
+                    setGraphic(addToFavoritesButton);
                 }
             }
         });
-        loadFavorites(); // Lädt die Favoriten beim Start
+
     }
 
+    /**
+     * Lädt Feeds basierend auf ausgewählten Datumsangaben.
+     * <p>
+     * Diese Methode filtert die Feeds nach dem ausgewählten Datumsbereich und aktualisiert die Anzeige
+     * entsprechend. Wenn keine Daten ausgewählt sind, werden keine Aktionen ausgeführt.
+     * </p>
+     */
     private void loadFeeds() {
         LocalDate startDate = startDatePicker.getValue();
         LocalDate endDate = endDatePicker.getValue();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
 
         if (startDate == null || endDate == null) {
-            return; // Beenden, wenn keine Datumsangaben vorhanden sind
+            return;
         }
 
         try {
             AdvancedFeedParser parser = new AdvancedFeedParser("https://www.derstandard.at/rss");
             NodeList feedItems = parser.parse();
 
-            feedListView.getItems().clear(); // Liste vor dem Hinzufügen neuer Elemente leeren
-            StringBuilder textAreaContent = new StringBuilder(); // Für rssFeedTextArea
+            feedListView.getItems().clear();
+            StringBuilder textAreaContent = new StringBuilder();
 
             for (int i = 0; i < feedItems.getLength(); i++) {
                 Element item = (Element) feedItems.item(i);
@@ -107,40 +115,48 @@ public class RSSReaderController {
                     String title = item.getElementsByTagName("title").item(0).getTextContent();
                     String link = item.getElementsByTagName("link").item(0).getTextContent();
 
-                    // Formatieren des anzuzeigenden Texts
                     String feedDisplayText = "Titel: " + title + "\nLink: " + link + "\nVeröffentlicht: " + pubDateStr + "\n\n";
 
-                    feedListView.getItems().add(feedDisplayText); // Hinzufügen zum ListView
-                    textAreaContent.append(feedDisplayText); // Hinzufügen zum TextArea
+                    feedListView.getItems().add(feedDisplayText);
+                    textAreaContent.append(feedDisplayText);
                 }
             }
 
-            rssFeedTextArea.setText(textAreaContent.toString()); // Aktualisieren der rssFeedTextArea
+            rssFeedTextArea.setText(textAreaContent.toString());
         } catch (Exception e) {
             showAlert("Fehler beim Laden der Feeds: " + e.getMessage());
         }
     }
 
 
-    private void loadFavorites() {
-        try {
-            List<String> savedFavorites = Files.readAllLines(Paths.get("favorites.txt"), StandardCharsets.UTF_8);
-            favoritesListView.getItems().setAll(savedFavorites);
-        } catch (IOException e) {
-            showAlert("Fehler beim Laden der Favoriten: " + e.getMessage());
-        }
-    }
 
+    /**
+     * Fügt einen ausgewählten Feed zu den Favoriten hinzu.
+     * <p>
+     * Diese Methode fügt einen ausgewählten Feed zur Favoritenliste hinzu und speichert diese Liste
+     * in einer Datei. Sie aktualisiert auch die Anzeige der Favoritenliste.
+     * </p>
+     *
+     * @param feed Der Feed, der zu den Favoriten hinzugefügt werden soll.
+     */
     public void addFavorite(String feed) {
         if (!favorites.contains(feed)) {
             favorites.add(feed);
             saveFavorites();
-            updateFavoritesListView(); // Aktualisieren der Favoritenliste
+            updateFavoritesListView();
         }
     }
 
+    /**
+     * Konfiguriert die ListView für die Anzeige von Favoriten mit einem Entfernen-Button.
+     * <p>
+     * Diese Methode setzt eine CellFactory für die favoritesListView, um für jeden
+     * Favoriten einen "Entfernen"-Button bereitzustellen. Beim Klick auf diesen Button
+     * wird der entsprechende Favorit aus der Liste entfernt.
+     * </p>
+     */
     private void configureFavoritesListView() {
-        favoritesListView.setCellFactory(lv -> new ListCell<String>() {
+        favoritesListView.setCellFactory(lv -> new ListCell<>() {
             private final Button removeButton = new Button("Entfernen");
 
             @Override
@@ -158,13 +174,29 @@ public class RSSReaderController {
         });
     }
 
+    /**
+     * Entfernt einen Favoriten aus der Liste und aktualisiert die Anzeige.
+     * <p>
+     * Diese Methode entfernt einen angegebenen Favoriten aus der internen Liste der Favoriten,
+     * speichert die aktualisierte Liste in einer Datei und aktualisiert die ListView-Anzeige.
+     * </p>
+     *
+     * @param favorite Der zu entfernende Favorit.
+     */
     private void removeFavorite(String favorite) {
-        favorites.remove(favorite); // Entfernen des Favoriten aus der Liste
-        saveFavorites(); // Speichern der aktualisierten Favoritenliste
-        updateFavoritesListView(); // Aktualisieren der ListView
+        favorites.remove(favorite);
+        saveFavorites();
+        updateFavoritesListView();
     }
 
 
+    /**
+     * Speichert die aktuelle Liste der Favoriten in einer Datei.
+     * <p>
+     * Diese Methode speichert die aktuelle Liste der Favoriten in einer Datei namens "favorites.txt".
+     * Bei Fehlern beim Speichern wird ein Alert-Dialog mit einer Fehlermeldung angezeigt.
+     * </p>
+     */
     private void saveFavorites() {
         try {
             Files.write(Paths.get("favorites.txt"), favorites, StandardCharsets.UTF_8);
@@ -173,8 +205,15 @@ public class RSSReaderController {
         }
     }
 
+    /**
+     * Aktualisiert die ListView, die die Favoriten anzeigt.
+     * <p>
+     * Diese Methode aktualisiert die favoritesListView mit den aktuellen Favoriten aus der internen Liste.
+     * Sie wird aufgerufen, nachdem Änderungen an der Favoritenliste vorgenommen wurden, um die Anzeige zu synchronisieren.
+     * </p>
+     */
     private void updateFavoritesListView() {
-        favoritesListView.getItems().setAll(favorites); // Aktualisieren der ListView mit den aktuellen Favoriten
+        favoritesListView.getItems().setAll(favorites);
     }
 
 
@@ -203,7 +242,14 @@ public class RSSReaderController {
                         try {
                             AdvancedFeedParser parser = new AdvancedFeedParser("https://www.derstandard.at/rss");
                             String rssText = parser.getFeedsForDisplay();
-                            Platform.runLater(() -> rssFeedTextArea.setText(rssText));
+                            Platform.runLater(() -> {
+                                rssFeedTextArea.setText(rssText);
+                                if (startDatePicker.getValue() == null || endDatePicker.getValue() == null) {
+                                    updateFeedListView(rssText);
+                                } else {
+                                    loadFeeds();
+                                }
+                            });
                             parser.saveFeedsToCSV();
                         } catch (Exception e) {
                             Platform.runLater(() -> showAlert("Fehler beim Aktualisieren der Feeds: " + e.getMessage()));
@@ -216,6 +262,21 @@ public class RSSReaderController {
         } catch (NumberFormatException e) {
             showAlert("Ungültiges Format für das Aktualisierungsintervall: " + e.getMessage());
         }
+    }
+
+
+    private void updateFeedListView(String rssText) {
+        List<String> feeds = new ArrayList<>();
+
+        String[] lines = rssText.split("\n");
+
+        for (String line : lines) {
+            if (line.contains("Title:") && line.contains("Link:") && line.contains("Published:")) {
+                feeds.add(line);
+            }
+        }
+
+        feedListView.getItems().setAll(feeds);
     }
 
 

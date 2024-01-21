@@ -6,6 +6,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+
+import java.io.IOException;
 import java.util.Objects;
 
 /**
@@ -33,72 +35,72 @@ public class RSSReaderApplication extends javafx.application.Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            // Load UI for RSS Reader
             Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/fhtw/rss_reader.fxml")));
 
-            // Set the window title
             primaryStage.setTitle("RSS Reader App");
 
-            // Create a scene and set its dimensions
             Scene scene = new Scene(root, 1200, 800);
 
-            // Set the scene for the primary stage
             primaryStage.setScene(scene);
 
-            // Show the primary stage
             primaryStage.show();
         } catch (Exception e) {
-            // Show an error dialog if an exception occurs
             RSSReaderController.showAlert("Ein Fehler ist aufgetreten: " + e.getMessage());
         }
     }
 
-    /**
-     * Zeigt einen Alert-Dialog mit einer spezifischen Nachricht.
-     *
-     * @param message Die anzuzeigende Nachricht.
-     */
 
-    /*private void showAlert(String message) {
-        Alert alert = new Alert(AlertType.ERROR);
-        alert.setTitle("Fehler");
-        alert.setHeaderText(null);
-       alert.setContentText(message);
-        alert.showAndWait();
-    }*/
 
     /**
      * Hauptmethode zum Starten der Anwendung.
+     * <p>
+     * Diese Methode ist der Einstiegspunkt für die JavaFX-Anwendung. Sie startet
+     * den Prozess zur Initialisierung der Benutzeroberfläche und der Hintergrunddienste.
+     * </p>
      *
      * @param args Kommandozeilenargumente, die an die Anwendung übergeben werden.
      */
     public static void main(String[] args) {
-        // Create a new thread to start RSS application
-        Thread rssThread = new Thread(RSSReaderApplication::startRSSApplication); //method reference
-
-        // Start the RSS application concurrently
+        Thread rssThread = new Thread(RSSReaderApplication::startRSSApplication);
         rssThread.start();
-
-        // Start the JavaFX application
         launch(args);
     }
 
+
     /**
      * Startet den RSS-Feed-Server und den RSS-Feed-Client.
+     * <p>
+     * Diese Methode initialisiert und startet sowohl den RSS-Feed-Server als auch den -Client.
+     * Der Server wird in einem separaten Thread gestartet und auf eine bestimmte Portnummer
+     * eingestellt, um Client-Anfragen entgegenzunehmen. Der Client verbindet sich mit dem Server
+     * und ruft die neuesten RSS-Feeds ab.
+     * </p>
      */
     public static void startRSSApplication() {
-        // Start RSS Feed Server
-        RSSFeedTCPServer server = new RSSFeedTCPServer("https://www.derstandard.at/rss");
-        server.start(6666);
+        Thread serverThread = new Thread(() -> {
+            RSSFeedTCPServer server = new RSSFeedTCPServer("https://www.derstandard.at/rss");
+            server.start(6666);
+        });
+        serverThread.start();
 
-        // Start RSS Feed Client
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            System.err.println("Warten unterbrochen: " + e.getMessage());
+        }
+
         RSSFeedTCPClient client = new RSSFeedTCPClient();
-        client.startConnection("127.0.0.1", 6666);
-        String feedData = client.getLatestFeeds();
-
-        // Update JavaFX UI from the JavaFX application thread
-        Platform.runLater(() -> System.out.println(feedData));
-
-        client.stopConnection();
-    }
-}
+        try {
+            client.startConnection("127.0.0.1", 6666);
+            String feedData = client.getLatestFeeds();
+            Platform.runLater(() -> System.out.println(feedData));
+        } catch (IOException e) {
+            System.err.println("Fehler beim Starten des Clients: " + e.getMessage());
+        } finally {
+            try {
+                client.stopConnection();
+            } catch (IOException e) {
+                System.err.println("Fehler beim Schließen der Verbindung: " + e.getMessage());
+            }
+        }
+    }}
