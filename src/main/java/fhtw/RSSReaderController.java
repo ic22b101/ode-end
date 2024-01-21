@@ -10,6 +10,10 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -56,8 +60,7 @@ public class RSSReaderController {
         LocalDate startDate = startDatePicker.getValue();
         LocalDate endDate = endDatePicker.getValue();
 
-
-
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'Z'", Locale.ENGLISH);
 
         BaseFeedParser parser = new BaseFeedParser("https://www.derstandard.at/rss");
         try {
@@ -65,29 +68,34 @@ public class RSSReaderController {
             StringBuilder filteredContent = new StringBuilder();
             for (int i = 0; i < itemList.getLength(); i++) {
                 Element item = (Element) itemList.item(i);
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'Z'", Locale.ENGLISH);
 
                 String pubDateStr = item.getElementsByTagName("pubDate").item(0).getTextContent();
-                ZonedDateTime pubDate = ZonedDateTime.parse(pubDateStr, formatter);
-                LocalDate pubDateLocal = pubDate.toLocalDate();
 
-                if ((pubDateLocal.isEqual(startDate) || pubDateLocal.isAfter(startDate)) &&
-                        (pubDateLocal.isEqual(endDate) || pubDateLocal.isBefore(endDate))) {
-                    String title = item.getElementsByTagName("title").item(0).getTextContent();
-                    String link = item.getElementsByTagName("link").item(0).getTextContent();
-                    filteredContent.append("Title: ").append(title)
-                            .append("\nLink: ").append(link)
-                            .append("\nPublished: ").append(pubDateStr)
-                            .append("\n\n");
+                try {
+                    TemporalAccessor temporalAccessor = formatter.parse(pubDateStr);
+                    LocalDateTime localDateTime = LocalDateTime.from(temporalAccessor);
+                    ZonedDateTime pubDate = ZonedDateTime.of(localDateTime, ZoneId.of("UTC"));
+
+                    if ((pubDate.toLocalDate().isEqual(startDate) || pubDate.toLocalDate().isAfter(startDate)) &&
+                            (pubDate.toLocalDate().isEqual(endDate) || pubDate.toLocalDate().isBefore(endDate))) {
+                        String title = item.getElementsByTagName("title").item(0).getTextContent();
+                        String link = item.getElementsByTagName("link").item(0).getTextContent();
+                        filteredContent.append("Title: ").append(title)
+                                .append("\nLink: ").append(link)
+                                .append("\nPublished: ").append(pubDateStr)
+                                .append("\n\n");
+                    }
+                } catch (DateTimeParseException e) {
+                    System.err.println("Fehler beim Parsen des Datums: " + e.getMessage());
                 }
             }
-
 
             rssFeedTextArea.setText(filteredContent.toString());
         } catch (Exception e) {
             System.err.println("Fehler beim Parsen der Feeds: " + e.getMessage());
         }
     }
+
 
 
     /**
