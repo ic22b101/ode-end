@@ -1,6 +1,6 @@
 package fhtw;
 
-
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -91,6 +91,7 @@ public class RSSReaderApplication extends javafx.application.Application {
         try {
             client.startConnection("127.0.0.1", 6666);
             String feedData = client.getLatestFeeds();
+            Platform.runLater(() -> System.out.println(feedData));
         } catch (IOException e) {
             System.err.println("Fehler beim Starten des Clients: " + e.getMessage());
         } finally {
