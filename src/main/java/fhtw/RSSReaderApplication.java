@@ -1,13 +1,11 @@
 package fhtw;
 
-import javafx.application.Application;
+
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import java.util.Objects;
 
 /**
@@ -60,13 +58,14 @@ public class RSSReaderApplication extends javafx.application.Application {
      *
      * @param message Die anzuzeigende Nachricht.
      */
-    //private void showAlert(String message) {
-        //Alert alert = new Alert(AlertType.ERROR);
-        //alert.setTitle("Fehler");
-        //alert.setHeaderText(null);
-       // alert.setContentText(message);
-      //  alert.showAndWait();
-    //}
+
+    /*private void showAlert(String message) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.setTitle("Fehler");
+        alert.setHeaderText(null);
+       alert.setContentText(message);
+        alert.showAndWait();
+    }*/
 
     /**
      * Hauptmethode zum Starten der Anwendung.

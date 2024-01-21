@@ -3,23 +3,22 @@ package fhtw;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeParseException;
-import java.time.temporal.TemporalAccessor;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.ZonedDateTime;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 
 
 /**
@@ -39,7 +38,7 @@ public class RSSReaderController {
 
     @FXML
     private void handleFilterButtonAction(ActionEvent event) {
-        filterFeeds();
+        loadFeeds();
     }
 
     @FXML
@@ -49,6 +48,135 @@ public class RSSReaderController {
     private TextArea rssFeedTextArea;
 
     private Timer timer;
+
+    private List<String> favorites = new ArrayList<>();
+
+    @FXML
+    private ListView<String> feedListView; // Angenommen, die Feeds werden als Strings angezeigt
+
+    @FXML
+    private ListView<String> favoritesListView; // Liste der Favoriten
+
+
+
+    public void initialize() {
+        configureFavoritesListView();
+        loadFavorites(); // Lädt die Feeds beim Start
+
+        feedListView.setCellFactory(lv -> new ListCell<String>() {
+            private final Button addToFavoritesButton = new Button("Zu Favoriten hinzufügen");
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item); // Anzeige des Feed-Eintrags
+                    addToFavoritesButton.setOnAction(e -> addFavorite(item)); // Hinzufügen des Feed-Eintrags zu Favoriten
+                    setGraphic(addToFavoritesButton); // Button neben dem Feed-Eintrag anzeigen
+                }
+            }
+        });
+        loadFavorites(); // Lädt die Favoriten beim Start
+    }
+
+    private void loadFeeds() {
+        LocalDate startDate = startDatePicker.getValue();
+        LocalDate endDate = endDatePicker.getValue();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
+
+        if (startDate == null || endDate == null) {
+            return; // Beenden, wenn keine Datumsangaben vorhanden sind
+        }
+
+        try {
+            AdvancedFeedParser parser = new AdvancedFeedParser("https://www.derstandard.at/rss");
+            NodeList feedItems = parser.parse();
+
+            feedListView.getItems().clear(); // Liste vor dem Hinzufügen neuer Elemente leeren
+            StringBuilder textAreaContent = new StringBuilder(); // Für rssFeedTextArea
+
+            for (int i = 0; i < feedItems.getLength(); i++) {
+                Element item = (Element) feedItems.item(i);
+                String pubDateStr = item.getElementsByTagName("pubDate").item(0).getTextContent();
+                LocalDateTime pubDate = LocalDateTime.parse(pubDateStr, formatter);
+
+                if (!pubDate.toLocalDate().isBefore(startDate) && !pubDate.toLocalDate().isAfter(endDate)) {
+                    String title = item.getElementsByTagName("title").item(0).getTextContent();
+                    String link = item.getElementsByTagName("link").item(0).getTextContent();
+
+                    // Formatieren des anzuzeigenden Texts
+                    String feedDisplayText = "Titel: " + title + "\nLink: " + link + "\nVeröffentlicht: " + pubDateStr + "\n\n";
+
+                    feedListView.getItems().add(feedDisplayText); // Hinzufügen zum ListView
+                    textAreaContent.append(feedDisplayText); // Hinzufügen zum TextArea
+                }
+            }
+
+            rssFeedTextArea.setText(textAreaContent.toString()); // Aktualisieren der rssFeedTextArea
+        } catch (Exception e) {
+            showAlert("Fehler beim Laden der Feeds: " + e.getMessage());
+        }
+    }
+
+
+    private void loadFavorites() {
+        try {
+            List<String> savedFavorites = Files.readAllLines(Paths.get("favorites.txt"), StandardCharsets.UTF_8);
+            favoritesListView.getItems().setAll(savedFavorites);
+        } catch (IOException e) {
+            showAlert("Fehler beim Laden der Favoriten: " + e.getMessage());
+        }
+    }
+
+    public void addFavorite(String feed) {
+        if (!favorites.contains(feed)) {
+            favorites.add(feed);
+            saveFavorites();
+            updateFavoritesListView(); // Aktualisieren der Favoritenliste
+        }
+    }
+
+    private void configureFavoritesListView() {
+        favoritesListView.setCellFactory(lv -> new ListCell<String>() {
+            private final Button removeButton = new Button("Entfernen");
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item);
+                    removeButton.setOnAction(e -> removeFavorite(item));
+                    setGraphic(removeButton);
+                }
+            }
+        });
+    }
+
+    private void removeFavorite(String favorite) {
+        favorites.remove(favorite); // Entfernen des Favoriten aus der Liste
+        saveFavorites(); // Speichern der aktualisierten Favoritenliste
+        updateFavoritesListView(); // Aktualisieren der ListView
+    }
+
+
+    private void saveFavorites() {
+        try {
+            Files.write(Paths.get("favorites.txt"), favorites, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            showAlert("Fehler beim Speichern der Favoriten: " + e.getMessage());
+        }
+    }
+
+    private void updateFavoritesListView() {
+        favoritesListView.getItems().setAll(favorites); // Aktualisieren der ListView mit den aktuellen Favoriten
+    }
+
 
     /**
      * Startet die regelmäßige Aktualisierung der RSS-Feeds.
@@ -90,56 +218,6 @@ public class RSSReaderController {
         }
     }
 
-
-    public void filterFeeds() {
-        LocalDate startDate = startDatePicker.getValue();
-        LocalDate endDate = endDatePicker.getValue();
-
-        // Überprüft ob startDate und endDate nicht null sind
-        if (startDate == null || endDate == null) {
-            showAlert("Bitte wählen Sie ein Start- und Enddatum aus.");
-            return;
-        }
-
-        if (endDate.isBefore(startDate)) {
-            showAlert("Das Enddatum muss nach dem Startdatum liegen.");
-            return;
-        }
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
-
-        BaseFeedParser parser = new BaseFeedParser("https://www.derstandard.at/rss");
-        try {
-            NodeList itemList = parser.parse();
-            StringBuilder filteredContent = new StringBuilder();
-            for (int i = 0; i < itemList.getLength(); i++) {
-                Element item = (Element) itemList.item(i);
-                String pubDateStr = item.getElementsByTagName("pubDate").item(0).getTextContent();
-
-                try {
-                    TemporalAccessor temporalAccessor = formatter.parse(pubDateStr);
-                    LocalDateTime localDateTime = LocalDateTime.from(temporalAccessor);
-                    ZonedDateTime pubDate = ZonedDateTime.of(localDateTime, ZoneId.of("UTC"));
-
-                    if ((pubDate.toLocalDate().isEqual(startDate) || pubDate.toLocalDate().isAfter(startDate)) &&
-                            (pubDate.toLocalDate().isEqual(endDate) || pubDate.toLocalDate().isBefore(endDate))) {
-                        String title = item.getElementsByTagName("title").item(0).getTextContent();
-                        String link = item.getElementsByTagName("link").item(0).getTextContent();
-                        filteredContent.append("Title: ").append(title)
-                                .append("\nLink: ").append(link)
-                                .append("\nPublished: ").append(pubDateStr)
-                                .append("\n\n");
-                    }
-                } catch (DateTimeParseException e) {
-                    System.err.println("Fehler beim Parsen des Datums: " + e.getMessage());
-                }
-            }
-
-            rssFeedTextArea.setText(filteredContent.toString());
-        } catch (Exception e) {
-            System.err.println("Fehler beim Parsen der Feeds: " + e.getMessage());
-        }
-    }
 
     /**
      * Zeigt einen Alert-Dialog mit einer spezifischen Nachricht.

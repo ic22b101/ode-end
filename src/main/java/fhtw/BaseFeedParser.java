@@ -54,5 +54,4 @@ public class BaseFeedParser {
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
         Document doc = dBuilder.parse(new URL(feedUrl).openStream());
         return doc.getElementsByTagName("item");
-    }
-}
+    } }
