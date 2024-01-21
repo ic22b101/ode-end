@@ -82,11 +82,10 @@ public class RSSReaderController {
                 }
             }
 
-            // Aktualisieren Sie die Anzeige mit den gefilterten Inhalten
+
             rssFeedTextArea.setText(filteredContent.toString());
         } catch (Exception e) {
             System.err.println("Fehler beim Parsen der Feeds: " + e.getMessage());
-            // Behandeln Sie den Fehler angemessen (z. B. Anzeigen einer Fehlermeldung in der Benutzeroberfläche)
         }
     }
 
