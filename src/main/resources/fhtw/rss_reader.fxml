@@ -23,5 +23,6 @@
         </items>
     </ComboBox>
     <Button text="Start Update" onAction="#startFeedUpdate"/>
-    <TextArea fx:id="rssFeedTextArea" editable="false"/>
+    <TextArea fx:id="rssFeedTextArea" editable="false" prefWidth="600" prefHeight="800"/>
+
 </VBox>
