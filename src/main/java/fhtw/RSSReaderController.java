@@ -8,8 +8,6 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
@@ -22,9 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.ZonedDateTime;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Controller-Klasse für die RSS-Reader JavaFX-Anwendung.
@@ -39,10 +35,7 @@ import javax.xml.parsers.ParserConfigurationException;
 public class RSSReaderController {
 
     @FXML
-    private DatePicker startDatePicker;
-
-    @FXML
-    private DatePicker endDatePicker;
+    private DatePicker startDatePicker,endDatePicker;
 
     @FXML
     private void handleFilterButtonAction(ActionEvent event) {
@@ -56,6 +49,47 @@ public class RSSReaderController {
     private TextArea rssFeedTextArea;
 
     private Timer timer;
+
+    /**
+     * Startet die regelmäßige Aktualisierung der RSS-Feeds.
+     * <p>
+     * Diese Methode liest das ausgewählte Aktualisierungsintervall, plant regelmäßige Aktualisierungen
+     * und aktualisiert die Textbereichskomponente der Benutzeroberfläche mit den neuesten Feeds.
+     * Bei Fehlern wird ein Alert-Dialog mit einer Fehlermeldung angezeigt.
+     * </p>
+     */
+    public void startFeedUpdate() {
+        if (timer != null) {
+            timer.cancel();
+        }
+        timer = new Timer();
+
+        try {
+            String selectedInterval = intervalComboBox.getValue();
+            if (selectedInterval != null) {
+                long interval = Long.parseLong(selectedInterval) * 60 * 60 * 1000;
+
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        try {
+                            AdvancedFeedParser parser = new AdvancedFeedParser("https://www.derstandard.at/rss");
+                            String rssText = parser.getFeedsForDisplay();
+                            Platform.runLater(() -> rssFeedTextArea.setText(rssText));
+                            parser.saveFeedsToCSV();
+                        } catch (Exception e) {
+                            Platform.runLater(() -> showAlert("Fehler beim Aktualisieren der Feeds: " + e.getMessage()));
+                        }
+                    }
+                }, 0, interval);
+            } else {
+                showAlert("Bitte wählen Sie ein Aktualisierungsintervall aus.");
+            }
+        } catch (NumberFormatException e) {
+            showAlert("Ungültiges Format für das Aktualisierungsintervall: " + e.getMessage());
+        }
+    }
+
 
     public void filterFeeds() {
         LocalDate startDate = startDatePicker.getValue();
@@ -108,46 +142,6 @@ public class RSSReaderController {
     }
 
     /**
-     * Startet die regelmäßige Aktualisierung der RSS-Feeds.
-     * <p>
-     * Diese Methode liest das ausgewählte Aktualisierungsintervall, plant regelmäßige Aktualisierungen
-     * und aktualisiert die Textbereichskomponente der Benutzeroberfläche mit den neuesten Feeds.
-     * Bei Fehlern wird ein Alert-Dialog mit einer Fehlermeldung angezeigt.
-     * </p>
-     */
-    public void startFeedUpdate() {
-        if (timer != null) {
-            timer.cancel();
-        }
-        timer = new Timer();
-
-        try {
-            String selectedInterval = intervalComboBox.getValue();
-            if (selectedInterval != null) {
-                long interval = Long.parseLong(selectedInterval) * 60 * 60 * 1000;
-
-                timer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        try {
-                            AdvancedFeedParser parser = new AdvancedFeedParser("https://www.derstandard.at/rss");
-                            String rssText = parser.getFeedsForDisplay();
-                            Platform.runLater(() -> rssFeedTextArea.setText(rssText));
-                            parser.saveFeedsToCSV();
-                        } catch (Exception e) {
-                            Platform.runLater(() -> showAlert("Fehler beim Aktualisieren der Feeds: " + e.getMessage()));
-                        }
-                    }
-                }, 0, interval);
-            } else {
-                showAlert("Bitte wählen Sie ein Aktualisierungsintervall aus.");
-            }
-        } catch (NumberFormatException e) {
-            showAlert("Ungültiges Format für das Aktualisierungsintervall: " + e.getMessage());
-        }
-    }
-
-    /**
      * Zeigt einen Alert-Dialog mit einer spezifischen Nachricht.
      * <p>
      * Diese Hilfsmethode wird verwendet, um Fehlermeldungen in einem Dialogfenster anzuzeigen.
@@ -155,7 +149,7 @@ public class RSSReaderController {
      *
      * @param message Die anzuzeigende Nachricht.
      */
-    private void showAlert(String message) {
+    public static void showAlert(String message) {
         Alert alert = new Alert(AlertType.ERROR);
         alert.setTitle("Fehler");
         alert.setHeaderText(null);

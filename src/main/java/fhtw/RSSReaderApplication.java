@@ -51,7 +51,7 @@ public class RSSReaderApplication extends javafx.application.Application {
             primaryStage.show();
         } catch (Exception e) {
             // Show an error dialog if an exception occurs
-            showAlert("Ein Fehler ist aufgetreten: " + e.getMessage());
+            RSSReaderController.showAlert("Ein Fehler ist aufgetreten: " + e.getMessage());
         }
     }
 
@@ -60,13 +60,13 @@ public class RSSReaderApplication extends javafx.application.Application {
      *
      * @param message Die anzuzeigende Nachricht.
      */
-    private void showAlert(String message) {
-        Alert alert = new Alert(AlertType.ERROR);
-        alert.setTitle("Fehler");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
+    //private void showAlert(String message) {
+        //Alert alert = new Alert(AlertType.ERROR);
+        //alert.setTitle("Fehler");
+        //alert.setHeaderText(null);
+       // alert.setContentText(message);
+      //  alert.showAndWait();
+    //}
 
     /**
      * Hauptmethode zum Starten der Anwendung.
