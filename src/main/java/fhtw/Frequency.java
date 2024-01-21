@@ -31,7 +31,6 @@ public class Frequency {
      *
      * @param args Kommandozeilenargumente (werden nicht verwendet).
      */
-
     public static void main(String[] args) {
         Timer timer = new Timer();
         timer.schedule(new RssFeedTask(), 0, UPDATE_INTERVAL);
@@ -70,4 +69,3 @@ public class Frequency {
         }
     }
 }
-

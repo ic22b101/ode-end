@@ -32,7 +32,6 @@ public class AdvancedFeedParser extends BaseFeedParser {
      *
      * @param feedUrl Die URL des RSS-Feeds, der verarbeitet werden soll.
      */
-
     public AdvancedFeedParser(String feedUrl) {
         super(feedUrl);
     }
@@ -81,7 +80,6 @@ public class AdvancedFeedParser extends BaseFeedParser {
      *
      * @throws IOException Wenn ein IO-Fehler beim Schreiben der Datei auftritt.
      */
-
     public void saveFeedsToCSV() {
         try {
             NodeList itemList = parse();
@@ -98,7 +96,6 @@ public class AdvancedFeedParser extends BaseFeedParser {
                         .append("\"").append(link).append("\",")
                         .append("\"").append(pubDate).append("\"\n");
             }
-
             try (PrintWriter writer = new PrintWriter(new FileWriter("rss_feeds.csv"))) {
                 writer.print(csvContent);
             }

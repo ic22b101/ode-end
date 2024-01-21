@@ -48,6 +48,7 @@ public class RSSReaderController {
     private void handleFilterButtonAction(ActionEvent event) {
         filterFeeds();
     }
+
     @FXML
     private ComboBox<String> intervalComboBox;
 
@@ -60,7 +61,18 @@ public class RSSReaderController {
         LocalDate startDate = startDatePicker.getValue();
         LocalDate endDate = endDatePicker.getValue();
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'Z'", Locale.ENGLISH);
+        // Überprüft ob startDate und endDate nicht null sind
+        if (startDate == null || endDate == null) {
+            showAlert("Bitte wählen Sie ein Start- und Enddatum aus.");
+            return;
+        }
+
+        if (endDate.isBefore(startDate)) {
+            showAlert("Das Enddatum muss nach dem Startdatum liegen.");
+            return;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
 
         BaseFeedParser parser = new BaseFeedParser("https://www.derstandard.at/rss");
         try {
@@ -68,7 +80,6 @@ public class RSSReaderController {
             StringBuilder filteredContent = new StringBuilder();
             for (int i = 0; i < itemList.getLength(); i++) {
                 Element item = (Element) itemList.item(i);
-
                 String pubDateStr = item.getElementsByTagName("pubDate").item(0).getTextContent();
 
                 try {
@@ -96,8 +107,6 @@ public class RSSReaderController {
         }
     }
 
-
-
     /**
      * Startet die regelmäßige Aktualisierung der RSS-Feeds.
      * <p>
@@ -106,7 +115,6 @@ public class RSSReaderController {
      * Bei Fehlern wird ein Alert-Dialog mit einer Fehlermeldung angezeigt.
      * </p>
      */
-
     public void startFeedUpdate() {
         if (timer != null) {
             timer.cancel();
@@ -132,7 +140,7 @@ public class RSSReaderController {
                     }
                 }, 0, interval);
             } else {
-                System.out.println("Bitte wählen Sie ein Aktualisierungsintervall aus.");
+                showAlert("Bitte wählen Sie ein Aktualisierungsintervall aus.");
             }
         } catch (NumberFormatException e) {
             showAlert("Ungültiges Format für das Aktualisierungsintervall: " + e.getMessage());

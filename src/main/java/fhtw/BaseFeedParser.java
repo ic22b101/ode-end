@@ -49,12 +49,10 @@ public class BaseFeedParser {
      * @throws SAXException Wenn ein Fehler beim Parsen des XML-Dokuments auftritt.
      * @throws IOException Wenn ein IO-Fehler beim Lesen des RSS-Feeds auftritt.
      */
-
-        public NodeList parse() throws MalformedURLException, ParserConfigurationException, SAXException, IOException {
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(new URL(feedUrl).openStream());
-            return doc.getElementsByTagName("item");
-        }
+    public NodeList parse() throws MalformedURLException, ParserConfigurationException, SAXException, IOException {
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        Document doc = dBuilder.parse(new URL(feedUrl).openStream());
+        return doc.getElementsByTagName("item");
     }
-
+}

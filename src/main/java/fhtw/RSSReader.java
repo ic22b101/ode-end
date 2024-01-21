@@ -31,7 +31,6 @@ public class RSSReader {
      *
      * @param args Kommandozeilenargumente, nicht verwendet.
      */
-
     public static void main(String[] args) {
         try {
             String rssUrl = "https://www.derstandard.at/rss";

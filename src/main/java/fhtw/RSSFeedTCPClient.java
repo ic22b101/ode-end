@@ -27,7 +27,6 @@ public class RSSFeedTCPClient {
      * @param ip   Die IP-Adresse des Servers.
      * @param port Der Port des Servers.
      */
-
     public void startConnection(String ip, int port) {
         try {
             clientSocket = new Socket(ip, port);
@@ -46,7 +45,6 @@ public class RSSFeedTCPClient {
      *
      * @return Die empfangenen RSS-Feed-Daten als String oder eine Fehlermeldung.
      */
-
     public String getLatestFeeds() {
         try {
             StringBuilder feeds = new StringBuilder();
@@ -68,7 +66,6 @@ public class RSSFeedTCPClient {
      * auf der Standardfehlerausgabe ausgegeben.
      * </p>
      */
-
     public void stopConnection() {
         try {
             if (in != null) {

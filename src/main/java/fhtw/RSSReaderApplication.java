@@ -1,6 +1,6 @@
 package fhtw;
 
-//import javafx.application.Application;
+import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -20,7 +20,6 @@ import java.util.Objects;
  *
  * @since 1.0
  */
-
 public class RSSReaderApplication extends javafx.application.Application {
 
     /**
@@ -33,7 +32,6 @@ public class RSSReaderApplication extends javafx.application.Application {
      *
      * @param primaryStage Das primäre Stage-Objekt bereitgestellt von JavaFX.
      */
-
     @Override
     public void start(Stage primaryStage) {
         try {
@@ -62,7 +60,6 @@ public class RSSReaderApplication extends javafx.application.Application {
      *
      * @param message Die anzuzeigende Nachricht.
      */
-
     private void showAlert(String message) {
         Alert alert = new Alert(AlertType.ERROR);
         alert.setTitle("Fehler");
@@ -76,7 +73,6 @@ public class RSSReaderApplication extends javafx.application.Application {
      *
      * @param args Kommandozeilenargumente, die an die Anwendung übergeben werden.
      */
-
     public static void main(String[] args) {
         // Create a new thread to start RSS application
         Thread rssThread = new Thread(RSSReaderApplication::startRSSApplication); //method reference
@@ -91,7 +87,6 @@ public class RSSReaderApplication extends javafx.application.Application {
     /**
      * Startet den RSS-Feed-Server und den RSS-Feed-Client.
      */
-
     public static void startRSSApplication() {
         // Start RSS Feed Server
         RSSFeedTCPServer server = new RSSFeedTCPServer("https://www.derstandard.at/rss");
@@ -107,5 +102,4 @@ public class RSSReaderApplication extends javafx.application.Application {
 
         client.stopConnection();
     }
-
 }

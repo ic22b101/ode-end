@@ -40,7 +40,6 @@ public class RSSFeedTCPServer {
      *
      * @param port Der Port, auf dem der Server lauschen soll.
      */
-
     public void start(int port) {
         try {
             serverSocket = new ServerSocket(port);
@@ -96,4 +95,3 @@ public class RSSFeedTCPServer {
         }
     }
 }
-
